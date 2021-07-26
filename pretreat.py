@@ -12,10 +12,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--backbone', type=str, default='vgg19',
                     help='backbone')               #'vgg19' or 'googlenet'
-
-
-
-parser.add_argument('--split', type=str, default='train',
+parser.add_argument('--split', type=str, default='test',
                     help='split')
 
 config = parser.parse_args(args=[])
@@ -55,16 +52,17 @@ class my_dataset(Dataset):
         return len(self.data_list)
 
 def save_feature(feature,target,n):
+    #保存预处理后的特征到对应文件夹下
     target=target.cpu().numpy()
     np.save(os.getcwd()+'/'+config.backbone+'/'+config.split+'/'+'00'+str(target)+'/'+'feature'+str(n)+'_'+str(target)+'.npy',feature)
 
 
 
 def pre_function(inputs,targets,model,n):
+    #预处理函数
     inputs=inputs.to(device)
     targets=targets.to(device)
     inputs=inputs.squeeze(1)
-
     for b in range(inputs.shape[0]):
         feature=np.zeros((4,1,14336))
         for i in range(inputs.shape[1]):

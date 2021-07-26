@@ -27,12 +27,8 @@ parser.add_argument('--backbone', type=str, default='vgg19',
 
 config = parser.parse_args(args=[])
 
-
-
-
-
 def MPLN_optimizer(mtln):
-    # learning_rate = 0.001
+    # 定义优化器
     if config.optimizer=='SGD':
         optimizer = torch.optim.SGD(mtln.parameters(), lr=config.lr)
     if config.optimizer == 'Adam':
@@ -66,10 +62,12 @@ class my_dataset(Dataset):
         return len(self.data_list)
 
 def CE():
+    # 定义损失函数
     loss=nn.CrossEntropyLoss()
     return loss
 
 def train(inputs,targets,mtln,optimizer,train_accur,e):
+    # 训练函数
     inputs=inputs.float().to(device)
     targets=targets.to(device)
     loss_sum=0

@@ -3,6 +3,7 @@ import math
 import cv2
 import os
 def convert_xy(axis_x,axis_y):
+    # 将二维矩阵线性变换到0-255之间
     min_x=np.min(axis_x)
     min_y=np.min(axis_y)
     axis_x-=min_x
@@ -13,18 +14,20 @@ def convert_xy(axis_x,axis_y):
     axis_y*=255/max_y
     return axis_x,axis_y
 def relative_pos(x0,y0,x,y):
+    # 将二维笛卡尔坐标转化为二维极坐标
     distance=np.sqrt((x0-x)**2+(y0-y)**2)
     angle=math.atan2(y-y0,x-x0)
     return distance,angle
 
 def copy_data(cir_coord):
+    #将128*16的矩阵统一resize到224*224大小，方便CNN网络处理
     t=cir_coord.shape[2]
     batch=cir_coord.shape[0]
     true_coord=np.zeros((cir_coord.shape[0],cir_coord.shape[1],224,224,cir_coord.shape[4]))
     for b in range(batch):
         for i in range(cir_coord.shape[1]):
             for j in range(cir_coord.shape[4]):
-                #map=np.tile(cir_coord[b,i,:,:,j],14)
+                map=np.tile(cir_coord[b,i,:,:,j],14)
                 map1=np.zeros((224,224))
                 if t>224:
                     map1=np.resize(cir_coord[b,i,:,:,j],(224,224))
@@ -41,18 +44,17 @@ def copy_data(cir_coord):
 
 
 def pre_treat_train(path):
+    #对训练集原始数据进行预处理
     data=np.load(path)
     t = data.shape[2]
     batch=data.shape[0]
     cir_coord = np.zeros((batch,4, t, 16, 2))#4为四个关键点，t为帧数，16为剩下的关节，2为两个圆坐标
     for b in range(batch):
-
         imcoords=[5,6,11,12]#四个关键点5,6,11,12
         for n,imcoord in enumerate(imcoords):
-
             for i in range(t):
                 data[b, 0, i, :, :][imcoord][0] += np.random.randint(-3, 3)
-                data[b, 2, i, :, :][imcoord][0] += np.random.randint(-3, 3)
+                data[b, 2, i, :, :][imcoord][0] += np.random.randint(-3, 3)#引入随机噪声
                 for coord_num in range(17):
                     if coord_num<imcoord:
                         data[b, 0, i, :, :][coord_num][0] += np.random.randint(-3, 3)
@@ -68,21 +70,21 @@ def pre_treat_train(path):
                                                        data[b, 2, i, :, :][coord_num][0])
                         cir_coord[b,n, i,coord_num-1,0],cir_coord[b,n, i,coord_num-1,1]=distance,angle
         cir_coord[b,n,:,:,0],cir_coord[b,n,:,:,1]=convert_xy(cir_coord[b,n,:,:,0],cir_coord[b,n,:,:,1])
-    # 显示灰度图
     for b in range(batch):
         for n in range(4):
             cir_coord[b, n, :, :, 0] /= 255
             cir_coord[b, n, :, :, 1] /= 255
+    #对即将进入CNN的矩阵进行归一化操作
     cir_coord = copy_data(cir_coord)
     return cir_coord
 
 def pre_treat_test(path):
+    #对测试集原始数据进行预处理
     data = np.load(path)
     t = data.shape[2]
     batch = data.shape[0]
     cir_coord = np.zeros((batch, 4, t, 16, 2))  # 4为四个关键点，t为帧数，16为剩下的关节，2为两个圆坐标
     for b in range(batch):
-
         imcoords = [5, 6, 11, 12]  # 四个关键点5,6,11,12
         for n, imcoord in enumerate(imcoords):
 
@@ -103,16 +105,10 @@ def pre_treat_test(path):
                         cir_coord[b, n, i, coord_num - 1, 0], cir_coord[b, n, i, coord_num - 1, 1] = distance, angle
         cir_coord[b, n, :, :, 0], cir_coord[b, n, :, :, 1] = convert_xy(cir_coord[b, n, :, :, 0],
                                                                         cir_coord[b, n, :, :, 1])
-
-    #显示灰度图
     for b in range(batch):
         for n in range(4):
             cir_coord[b, n, :, :, 0]/=255
             cir_coord[b, n, :, :, 1]/=255
-
-    # cv2.imshow('1',cir_coord[0,3,:,:,0])
-    # cv2.imshow('2', cir_coord[0,3,:,:,1])
-    # cv2.waitKey(0)
     cir_coord=copy_data(cir_coord)
     return cir_coord
 

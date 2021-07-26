@@ -11,7 +11,7 @@ parser.add_argument('--backbone', type=str, default='vgg19',
                     help='backbone')               #'vgg19' or 'googlenet'
 parser.add_argument('--split', type=str, default='test',
                     help='split')
-parser.add_argument('--num', type=str, default='40',
+parser.add_argument('--num', type=str, default='45',
                     help='model num')
 config = parser.parse_args(args=[])
 
@@ -43,6 +43,7 @@ class my_dataset(Dataset):
 
 
 def test(inputs,targets,mtln,all,accuracy):
+    #测试函数
     batch=inputs.shape[0]
     inputs=inputs.float().to(device)
     targets=targets.numpy()
@@ -52,8 +53,8 @@ def test(inputs,targets,mtln,all,accuracy):
             output[imcoord,:,:]=mtln(inputs[b][imcoord])
         pre_label=torch.argmax(torch.mean(output,dim=0))
         all[targets[b]] += 1
-        #print(torch.mean(output,dim=0))
-        #print(pre_label)
+        print(torch.mean(output,dim=0))
+        print(pre_label)
         if targets[b]==pre_label:
             accuracy[targets[b]]+=1
     return all,accuracy
